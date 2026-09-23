@@ -1,139 +1,192 @@
 # NovaCell Telecom Care Bot
 
-A Retrieval-Augmented Generation (RAG) chatbot that answers Tier-1 telecom
-support questions grounded **only** in curated sample knowledge — it never
-invents policy, pricing, or steps. Built as an AI PM portfolio project.
+A portfolio prototype exploring one product question:
+
+> **What should an AI support assistant do when company knowledge is incomplete?**
+
+NovaCell is a hypothetical mobile operator with ~4 million subscribers. Most support contacts are Tier-1, self-resolvable questions whose answers already exist across company knowledge sources. **MyTelecom** is the customer-facing app used in the prototype.
 
 **Live demo:** [novacell-telecom-chatbot.streamlit.app](https://novacell-telecom-chatbot.streamlit.app/)
 
-> **Portfolio demo.** Uses approved sample telecom knowledge. No access to live
-> customer accounts, billing or usage data.
+> **Portfolio demo.** Uses approved sample telecom knowledge. No access to live customer accounts, billing or usage data.
 
 ---
 
-## What it does
+## My role
 
-- Answers connectivity, data, roaming, SIM/eSIM, billing, and plan questions
-- Retrieves context from four knowledge sources in parallel before generating
-- Refuses to answer when context is insufficient — routes to 611 or the MyTelecom app
-- Never uses model memory or general knowledge to fill gaps
+I owned the **product problem, scope, requirements, product rules, evaluation criteria and iteration decisions**.
 
-## Architecture
+AI coding tools were used to accelerate implementation. The product choices documented here — including grounded answers, safe refusal, escalation boundaries and extensibility — were deliberate PM decisions that I defined and tested.
+
+---
+
+## The problem
+
+NovaCell's support knowledge is spread across:
+- FAQs
+- past resolved tickets
+- official user guides
+- mobile-plan information
+
+Customers may wait for support even when the answer already exists somewhere in those sources.
+
+The product hypothesis was:
+
+> **A useful support assistant does not need to answer everything. It needs to answer supported questions reliably and fail safely when support knowledge is insufficient.**
+
+---
+
+## Key product decisions
+
+### 1. Company knowledge over model memory
+The assistant answers only from retrieved NovaCell knowledge. It does not use general model knowledge to fill gaps.
+
+### 2. Safe refusal is part of the product
+If the retrieved knowledge is insufficient, the assistant says so and routes the user to the **MyTelecom app or 611** instead of guessing.
+
+### 3. Personal account data is a hard boundary
+The prototype has no live billing, usage or customer-account access. It never implies otherwise.
+
+### 4. The knowledge layer should expand without rebuilding the product
+The initial system used three sources. I later added a fourth source containing **14 plans and add-ons**.
+
+That required:
+- one new ingestion path
+- one configuration change
+- no changes to retrieval, generation or UI logic
+
+This was used as a practical test of extensibility rather than treating modularity as a design claim.
+
+---
+
+## Validation so far
+
+Validation is manual and scenario-based.
+
+- Supported telecom questions were answered from the approved knowledge sources.
+- An unsupported question was refused instead of answered from general model knowledge.
+- Adding the fourth knowledge source enabled plan-related questions without changing the downstream experience.
+
+This is **prototype-level validation**, not production-scale evaluation or customer-adoption evidence.
+
+---
+
+## What the demo does
+
+- Answers Tier-1 questions about connectivity, data, roaming, SIM/eSIM, billing and plans
+- Retrieves from four knowledge sources before generating a response
+- Refuses unsupported questions rather than improvising
+- Provides a simple Streamlit interface with sample questions
+- Preserves no user account data and has no live telecom-system integration
+
+---
+
+## Current architecture
 
 ```
 User question
-     │
-     ▼
-Merged Retriever  (parallel, top-3 per source = 12 docs)
-  ├── ChromaDB · faq        FAQ question/answer pairs
-  ├── ChromaDB · tickets    resolved support tickets
-  ├── ChromaDB · guides     PDF troubleshooting guide chunks
-  └── ChromaDB · plans      mobile plans and add-ons
-     │  (source-labelled context injected into prompt)
-     ▼
-ChatPromptTemplate  (telecom persona + strict grounding rules)
-     ▼
-Llama 3.3 70B on Groq  (temperature=0, deterministic)
-     ▼
-StrOutputParser → streamed response
+     |
+     v
+Parallel retrieval across four ChromaDB collections
+  - FAQ
+  - Resolved tickets
+  - User guides
+  - Mobile plans
+     |
+     v
+Source-labelled context
+     |
+     v
+Grounded prompt with refusal rules
+     |
+     v
+Groq-hosted LLM
+     |
+     v
+Streamed response in Streamlit
 ```
 
-- **Embeddings:** `sentence-transformers/all-MiniLM-L6-v2` (local, no API cost per query)
-- **Vector store:** ChromaDB, persisted to `chroma_store/`
-- **LLM:** `llama-3.3-70b-versatile` via Groq API
-- **Framework:** LangChain (LCEL) · **UI:** Streamlit
+**Current implementation**
+- Embeddings: `sentence-transformers/all-MiniLM-L6-v2`
+- Vector store: ChromaDB
+- LLM: `openai/gpt-oss-20b` via Groq
+- Orchestration: LangChain LCEL
+- UI: Streamlit
+- Retrieval: top 3 results from each of 4 sources
 
 ---
-
-## Requirements
-
-- Python 3.11+
-- A free [Groq API key](https://console.groq.com)
-
----
-
-## Local setup
-
-```bash
-# 1. Clone the repo
-git clone https://github.com/abidfayaz/novacell-telecom-chatbot.git
-cd novacell-telecom-chatbot
-
-# 2. Install dependencies
-pip install -r requirements.txt
-
-# 3. Add your Groq API key
-cp .env.example .env
-# Edit .env and paste your key: GROQ_API_KEY=gsk_...
-```
-
-The vector store is pre-built and committed to the repo — no ingestion step needed on first run.
-
-## Run locally
-
-```bash
-streamlit run app.py
-```
-
-The first query downloads the ~90 MB embedding model into `~/.cache/huggingface/`. Subsequent queries use the cached model.
-
----
-
-## Streamlit Cloud deployment
-
-1. Fork or clone this repo to your GitHub account
-2. Go to [share.streamlit.io](https://share.streamlit.io) and connect the repo
-3. Set the main file path to `app.py`
-4. In **App settings → Secrets**, add:
-   ```toml
-   GROQ_API_KEY = "gsk_your_key_here"
-   ```
-5. Deploy
-
-The app reads `GROQ_API_KEY` from Streamlit Secrets on the cloud and from `.env` locally.
-
----
-
-## Project layout
-
-| File | Role |
-|---|---|
-| `config.py` | Paths, model names, retrieval depth, collection registry |
-| `vectorstore.py` | Shared embeddings + ChromaDB helpers |
-| `ingest_*.py` | One ingest script per knowledge source |
-| `ingest_all.py` | Runs all ingest scripts in one pass |
-| `retriever.py` | Parallel fan-out across collections, source labelling |
-| `chain.py` | LCEL RAG chain (prompt + Groq LLM + parser) |
-| `app.py` | Streamlit chat UI |
-| `main.py` | CLI REPL (local testing) |
-| `Data/` | Source knowledge files (CSV, SQLite, PDF, JSON) |
-| `chroma_store/` | Pre-built vector store (committed; no re-ingestion needed) |
 
 ## Knowledge sources
 
-| Collection | Source file | Documents |
+| Collection | Source | Purpose |
 |---|---|---|
-| `faq` | `Data/faq.csv` | Question/answer pairs |
-| `tickets` | `Data/tickets.db` | Resolved support tickets |
-| `guides` | `Data/telecom_guide.pdf` | Chunked PDF (600 chars, 100 overlap) |
-| `plans` | `Data/plans.json` | Mobile plans and add-ons |
-
-To rebuild the vector store after editing a knowledge source: `python ingest_all.py`
+| FAQ | `Data/faq.csv` | Common questions and approved answers |
+| Resolved tickets | `Data/tickets.db` | Past support issues and resolutions |
+| User guides | `Data/telecom_guide.pdf` | Step-by-step troubleshooting guidance |
+| Mobile plans | `Data/plans.json` | 14 plans and add-ons |
 
 ---
 
 ## Known limitations
 
-- Demo knowledge only — no real customer data
-- No memory between sessions (each conversation starts fresh)
-- Embedding model downloads ~90 MB on first query in a new environment
-- Not production-hardened (no rate limiting, no auth)
+- Manual evaluation only
+- No automated regression suite
+- No real customer traffic
+- No production monitoring
+- No live CRM, billing or usage integration
+- No session-aware retrieval across turns
+- Not production-hardened
+
+The next product priority would be **repeatable evaluation**, not additional features.
 
 ---
 
-## Extending
+## Run locally
 
-To add a new knowledge source: write a new `ingest_<source>.py` that builds a
-Chroma collection, then register the collection name in `RETRIEVAL_COLLECTIONS`
-in `config.py`. The retriever picks it up automatically without changes to
-`retriever.py`, `chain.py`, or the UI.
+### Requirements
+- Python 3.11+
+- A Groq API key
+
+### Setup
+
+```bash
+git clone https://github.com/abidfayaz/novacell-telecom-chatbot.git
+cd novacell-telecom-chatbot
+pip install -r requirements.txt
+cp .env.example .env
+# Add your Groq key to .env
+```
+
+The vector store is pre-built and committed to the repository.
+
+### Start the app
+
+```bash
+streamlit run app.py
+```
+
+For Streamlit Cloud, add `GROQ_API_KEY` under **App settings → Secrets**.
+
+---
+
+## Repository structure
+
+| File | Purpose |
+|---|---|
+| `app.py` | Streamlit interface |
+| `chain.py` | Grounded generation and refusal rules |
+| `retriever.py` | Parallel retrieval across knowledge sources |
+| `config.py` | Shared model, retrieval and path configuration |
+| `ingest_*.py` | Knowledge-source ingestion |
+| `Data/` | Sample knowledge files |
+| `chroma_store/` | Pre-built vector store |
+| `PRD.md` | Original product requirements exercise |
+| `PROBLEM_STATEMENT.txt` | Original product brief |
+
+---
+
+## Product principle
+
+> **The assistant should never sound more confident than the knowledge available to it.**
+
+That principle shaped the grounding rules, escalation behaviour and evaluation focus of the prototype.
