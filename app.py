@@ -72,10 +72,7 @@ def handle_question(question: str) -> None:
         except Exception as _exc:
             import sys
             print(f"[GROQ ERROR] {type(_exc).__name__}: {_exc}", file=sys.stderr)
-            response = (
-                "The AI service is temporarily unavailable. "
-                "Please try again shortly."
-            )
+            response = f"DEBUG — {type(_exc).__name__}: {_exc}"
             st.warning(response)
 
     st.session_state.messages.append({"role": "assistant", "content": response})
