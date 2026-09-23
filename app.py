@@ -38,7 +38,8 @@ SAMPLE_QUESTIONS = [
 
 DEMO_BANNER = (
     "**Portfolio demo** using approved sample telecom knowledge. "
-    "No access to live customer accounts, billing or usage data."
+    "No access to live customer accounts, billing or usage data.  \n"
+    "The first question may take a few seconds to load."
 )
 
 GITHUB_URL = "https://github.com/abidfayaz/novacell-telecom-chatbot"
