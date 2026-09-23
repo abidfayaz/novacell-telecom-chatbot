@@ -77,7 +77,7 @@ This is **prototype-level validation**, not production-scale evaluation or custo
 - Retrieves from four knowledge sources before generating a response
 - Refuses unsupported questions rather than improvising
 - Provides a simple Streamlit interface with sample questions
-- Preserves no user account data and has no live telecom-system integration
+- Uses no live user account data and has no live telecom-system integration
 
 ---
 
