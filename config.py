@@ -46,7 +46,7 @@ RETRIEVAL_COLLECTIONS: dict[str, str] = {
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"  # FR-09, NFR-02
 
 # --- Retrieval -------------------------------------------------------------
-TOP_K = 3  # FR-07: top-3 per collection -> 9 docs total across 3 collections
+TOP_K = 3  # Current prototype: top-3 per collection -> 12 docs total across 4 collections
 
 # --- PDF chunking ----------------------------------------------------------
 CHUNK_SIZE = 600       # FR-16
