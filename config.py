@@ -53,7 +53,7 @@ CHUNK_SIZE = 600       # FR-16
 CHUNK_OVERLAP = 100    # FR-16
 
 # --- LLM (Groq) ------------------------------------------------------------
-LLM_MODEL = "llama-3.1-8b-instant"  # FR-13
+LLM_MODEL = "openai/gpt-oss-20b"  # FR-13
 LLM_TEMPERATURE = 0           # FR-12: deterministic, factual
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
