@@ -1,0 +1,29 @@
+# Secrets — never commit these
+.env
+API key.txt
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.uv/
+uv.lock
+
+# HuggingFace / model cache
+.cache/
+
+# Claude Code session files
+.claude/
+
+# Other-project files that live in the same parent folder
+visamate-ai/
+PRD_VISA.MD
+generate_carousels.py
+.env copy.example
+
+# OS
+.DS_Store
+Thumbs.db
