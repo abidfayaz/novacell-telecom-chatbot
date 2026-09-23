@@ -4,7 +4,7 @@ A Retrieval-Augmented Generation (RAG) chatbot that answers Tier-1 telecom
 support questions grounded **only** in curated sample knowledge — it never
 invents policy, pricing, or steps. Built as an AI PM portfolio project.
 
-**Live demo:** [novacell-telecom-chatbot.streamlit.app](https://novacell-telecom-chatbot.streamlit.app)
+**Live demo:** [novacell-telecom-chatbot.streamlit.app](https://novacell-telecom-chatbot.streamlit.app/)
 
 > **Portfolio demo.** Uses approved sample telecom knowledge. No access to live
 > customer accounts, billing or usage data.
