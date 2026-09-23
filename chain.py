@@ -1,4 +1,4 @@
-"""The RAG chain: retrieve -> prompt -> Llama 3.3 70B on Groq -> parsed text.
+"""The RAG chain: retrieve -> prompt -> GPT-OSS 20B on Groq -> parsed text.
 
 Implements the LCEL pipeline from the architecture diagram. The LLM is
 instructed to answer using ONLY the retrieved context (FR-10) and to escalate
