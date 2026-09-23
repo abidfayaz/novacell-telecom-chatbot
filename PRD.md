@@ -1,5 +1,7 @@
 # Product Requirements Document — RAG Telecom Customer Care Chatbot
 
+> **Project note:** This is the original PRD created for the initial exercise. The working prototype later evolved from three to four knowledge sources and the deployed model was changed. For the current implementation, see the root README and `config.py`.
+
 **Date:** 2026-06-10  
 **Author:** Dhaval Patel
 
