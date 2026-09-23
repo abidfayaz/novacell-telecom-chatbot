@@ -68,7 +68,9 @@ def handle_question(question: str) -> None:
     with st.chat_message("assistant"):
         try:
             response = st.write_stream(stream_answer(question))  # FR-05
-        except Exception:
+        except Exception as _exc:
+            import sys
+            print(f"[GROQ ERROR] {type(_exc).__name__}: {_exc}", file=sys.stderr)
             response = (
                 "The AI service is temporarily unavailable. "
                 "Please try again shortly."

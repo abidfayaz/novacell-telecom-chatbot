@@ -54,15 +54,22 @@ PROMPT = ChatPromptTemplate.from_messages(
 
 @functools.lru_cache(maxsize=1)
 def get_llm() -> ChatGroq:
-    if not GROQ_API_KEY:
+    import os
+
+    # Read at call time (not import time) so Streamlit Secrets are available.
+    # Priority: env var → config value → st.secrets (Streamlit Cloud).
+    key = os.getenv("GROQ_API_KEY") or GROQ_API_KEY
+    if not key:
+        try:
+            import streamlit as st
+            key = st.secrets.get("GROQ_API_KEY") or None
+        except Exception:
+            pass
+    if not key:
         raise RuntimeError(
-            "GROQ_API_KEY is not set. Copy .env.example to .env and add your key."
+            "GROQ_API_KEY is not set. Add it to .env locally or to Streamlit Secrets on the cloud."
         )
-    return ChatGroq(
-        model=LLM_MODEL,
-        temperature=LLM_TEMPERATURE,
-        api_key=GROQ_API_KEY,
-    )
+    return ChatGroq(model=LLM_MODEL, temperature=LLM_TEMPERATURE, api_key=key)
 
 
 @functools.lru_cache(maxsize=1)
